@@ -110,7 +110,7 @@ function DocumentDetail({ documentId, user, onRetour }) {
 
                 <a
                     className="btn btn-outline-primary mb-3"
-                    href={`http://localhost:5000/uploads/${document.fichier_pdf}?t=${Date.now()}`}
+                    href={`https://gct-backend-production.up.railway.app/uploads/${document.fichier_pdf}?t=${Date.now()}`}
                     target="_blank"
                     rel="noreferrer"
                 >
