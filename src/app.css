@@ -1,0 +1,222 @@
+/* ============================================================
+   THEME - Application GCT Signature Électronique
+   Couleurs et styles centralisés ici.
+   ============================================================ */
+
+:root {
+    --color-primary: #1F4E79;
+    --color-primary-dark: #163A5C;
+    --color-primary-light: #EAF1F8;
+    --color-accent: #2E7D32;
+    --color-accent-light: #E5F3E6;
+    --color-warning: #B9750C;
+    --color-warning-light: #FBF0DD;
+    --color-bg: #F4F6F9;
+    --color-surface: #FFFFFF;
+    --color-text: #1E2A38;
+    --color-muted: #6B7785;
+    --color-border: #E2E6EA;
+    --radius: 10px;
+    --shadow: 0 2px 10px rgba(20, 30, 45, 0.06);
+    --shadow-lg: 0 8px 28px rgba(20, 30, 45, 0.10);
+}
+
+body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+/* ===== Barre de navigation ===== */
+.app-navbar {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%) !important;
+    box-shadow: var(--shadow);
+    padding-top: 0.7rem;
+    padding-bottom: 0.7rem;
+}
+
+.app-navbar .navbar-brand {
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+
+
+.app-navbar .btn-outline-light {
+    border-color: rgba(255, 255, 255, 0.4);
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.15s ease;
+}
+
+.app-navbar .btn-outline-light:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.7);
+}
+
+.app-navbar .user-pill {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    padding: 0.3rem 0.8rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+/* ===== Pages de connexion / inscription ===== */
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(160deg, var(--color-primary) 0%, var(--color-primary-dark) 55%, #0E2438 100%);
+}
+
+.auth-card {
+    width: 380px;
+    background: var(--color-surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    border: none;
+    padding: 2.2rem 2rem;
+}
+
+.auth-logo {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0 auto 1rem auto;
+}
+
+.auth-subtitle {
+    font-size: 0.85rem;
+    color: var(--color-muted);
+}
+
+/* ===== Cartes ===== */
+.card {
+    border: none;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+
+.card-accent {
+    border-top: 4px solid var(--color-primary);
+}
+
+/* ===== Boutons ===== */
+.btn {
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.15s ease;
+}
+
+.btn-primary {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.btn-primary:hover, .btn-primary:focus {
+    background-color: var(--color-primary-dark);
+    border-color: var(--color-primary-dark);
+}
+
+.btn-success {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+}
+
+.btn-success:hover {
+    background-color: #235e27;
+    border-color: #235e27;
+}
+
+/* ===== Formulaires ===== */
+.form-control, .form-select {
+    border-radius: 8px;
+    border-color: var(--color-border);
+    padding: 0.55rem 0.8rem;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+.form-label {
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: var(--color-text);
+}
+
+/* ===== Tableaux ===== */
+.table {
+    background: var(--color-surface);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+}
+
+.table thead.table-dark th {
+    background-color: var(--color-primary) !important;
+    border-color: var(--color-primary) !important;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.table td, .table th {
+    vertical-align: middle;
+    padding: 0.85rem 1rem;
+}
+
+.table tbody tr:hover {
+    background-color: var(--color-primary-light);
+}
+
+/* ===== Badges de statut ===== */
+.badge {
+    font-weight: 600;
+    font-size: 0.78rem;
+    padding: 0.4em 0.75em;
+    border-radius: 999px;
+}
+
+.badge.bg-success {
+    background-color: var(--color-accent-light) !important;
+    color: var(--color-accent) !important;
+}
+
+.badge.bg-warning {
+    background-color: var(--color-warning-light) !important;
+    color: var(--color-warning) !important;
+}
+
+/* ===== Alertes ===== */
+.alert {
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+/* ===== Conteneur principal ===== */
+.page-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 1rem 3rem 1rem;
+}
