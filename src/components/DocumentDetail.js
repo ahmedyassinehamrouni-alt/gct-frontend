@@ -28,7 +28,6 @@ function DocumentDetail({ documentId, user, onRetour }) {
         const mySigner = signers.find(s => s.user_id === user.id);
         if (!mySigner || mySigner.statut === 'signe') return false;
         if (!document.ordre_obligatoire) return true;
-        // Check if all previous signers have signed
         const precedents = signers.filter(s => s.ordre < mySigner.ordre);
         return precedents.every(s => s.statut === 'signe');
     };
@@ -85,13 +84,15 @@ function DocumentDetail({ documentId, user, onRetour }) {
                     )}
                 </p>
 
-                <a className="btn btn-outline-primary mb-3 d-block"
-                    href={`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/uploads/${document.fichier_pdf}?t=${Date.now()}`}
-                    target="_blank" rel="noreferrer">
+                <a
+                    className="btn btn-outline-primary mb-3"
+                    href={`https://gct-backend-production.up.railway.app/uploads/${document.fichier_pdf}?t=${Date.now()}`}
+                    target="_blank"
+                    rel="noreferrer"
+                >
                     Voir le fichier PDF
                 </a>
 
-                {/* Signing progress */}
                 {signers.length > 0 && (
                     <div className="mb-3">
                         <div className="d-flex justify-content-between align-items-center mb-2">
