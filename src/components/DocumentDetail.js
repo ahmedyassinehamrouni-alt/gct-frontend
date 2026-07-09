@@ -85,21 +85,13 @@ function DocumentDetail({ documentId, user, onRetour }) {
                     )}
                 </p>
 
-<<<<<<< HEAD
-                <a
-                    className="btn btn-outline-primary mb-3"
-                    href={`https://gct-backend-production.up.railway.app/uploads/${document.fichier_pdf}?t=${Date.now()}`}
-                    target="_blank"
-                    rel="noreferrer"
-                >
-                    📄 Voir le fichier PDF
-=======
-                <a className="btn btn-outline-primary mb-3 d-block"
-                    href={`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/uploads/${document.fichier_pdf}?t=${Date.now()}`}
-                    target="_blank" rel="noreferrer">
-                    Voir le fichier PDF
->>>>>>> 14fbe2cf (add gct logo and multi-signer workflow)
-                </a>
+className="btn btn-outline-primary mb-3"
+    href={`https://gct-backend-production.up.railway.app/uploads/${document.fichier_pdf}?t=${Date.now()}`}
+    target="_blank"
+    rel="noreferrer"
+>
+    📄 Voir le fichier PDF
+</a>
 
                 {/* Signing progress */}
                 {signers.length > 0 && (
