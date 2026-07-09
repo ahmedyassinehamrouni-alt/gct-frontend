@@ -85,13 +85,11 @@ function DocumentDetail({ documentId, user, onRetour }) {
                     )}
                 </p>
 
-className="btn btn-outline-primary mb-3"
-    href={`https://gct-backend-production.up.railway.app/uploads/${document.fichier_pdf}?t=${Date.now()}`}
-    target="_blank"
-    rel="noreferrer"
->
-    📄 Voir le fichier PDF
-</a>
+                <a className="btn btn-outline-primary mb-3 d-block"
+                    href={`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/uploads/${document.fichier_pdf}?t=${Date.now()}`}
+                    target="_blank" rel="noreferrer">
+                    Voir le fichier PDF
+                </a>
 
                 {/* Signing progress */}
                 {signers.length > 0 && (
