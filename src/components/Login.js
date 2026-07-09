@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import api from '../api';
-
+import logo from '../assets/logogct.png';
 function Login({ onLogin, onAllerInscription, emailParDefaut }) {
     const [email, setEmail] = useState(emailParDefaut || '');
     const [motDePasse, setMotDePasse] = useState('');
@@ -94,6 +94,9 @@ function Login({ onLogin, onAllerInscription, emailParDefaut }) {
     return (
         <div className="auth-page">
             <div className="auth-card">
+                <div className="text-center mb-3">
+    <img src={logo} alt="GCT Logo" style={{ width: '100px', height: 'auto' }} />
+                </div>
                 <h3 className="text-center mb-1">Connexion</h3>
                 <p className="text-center auth-subtitle mb-4">Application GCT - Signature Électronique</p>
 
