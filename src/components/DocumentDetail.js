@@ -9,6 +9,8 @@ function DocumentDetail({ documentId, user, onRetour }) {
     const [afficherModal, setAfficherModal] = useState(false);
     const [clePrivee, setClePrivee] = useState('');
     const [enCours, setEnCours] = useState(false);
+    const [verification, setVerification] = useState(null);
+    const [verificationEnCours, setVerificationEnCours] = useState(false);
 
     const chargerDocument = async () => {
         try {
@@ -18,6 +20,7 @@ function DocumentDetail({ documentId, user, onRetour }) {
             ]);
             setDocument(docRes.data);
             setSigners(signersRes.data);
+            setVerification(null);
         } catch (err) { console.error(err); }
     };
 
@@ -54,6 +57,27 @@ function DocumentDetail({ documentId, user, onRetour }) {
             setMessageType('danger');
             setAfficherModal(false);
         } finally { setEnCours(false); }
+    };
+
+    const handleVerifier = async () => {
+        setVerificationEnCours(true);
+        setVerification(null);
+        try {
+            const sigReponse = await api.get(`/signatures?document_id=${document.id}`);
+            const signatures = sigReponse.data;
+            if (!signatures || signatures.length === 0) {
+                setVerification({ erreur: 'Aucune signature trouvee pour ce document.' });
+                return;
+            }
+            const derniere = signatures[signatures.length - 1];
+            const verif = await api.get(`/signatures/verifier/${derniere.id}`);
+            setVerification(verif.data);
+        } catch (err) {
+            console.error(err);
+            setVerification({ erreur: 'Erreur lors de la verification.' });
+        } finally {
+            setVerificationEnCours(false);
+        }
     };
 
     const signeCount = signers.filter(s => s.statut === 'signe').length;
@@ -93,6 +117,7 @@ function DocumentDetail({ documentId, user, onRetour }) {
                     Voir le fichier PDF
                 </a>
 
+                {/* Signing progress */}
                 {signers.length > 0 && (
                     <div className="mb-3">
                         <div className="d-flex justify-content-between align-items-center mb-2">
@@ -138,11 +163,59 @@ function DocumentDetail({ documentId, user, onRetour }) {
 
                 {message && <div className={`alert alert-${messageType}`}>{message}</div>}
 
-                {user.role === 'responsable' && monTour() && (
-                    <button className="btn btn-success w-100" onClick={() => setAfficherModal(true)}>
-                        Signer ce document
-                    </button>
+                {/* Verification result */}
+                {verification && (
+                    <div className="mt-3 mb-3">
+                        {verification.erreur ? (
+                            <div className="alert alert-danger">{verification.erreur}</div>
+                        ) : (
+                            <div className={`alert ${verification.signature_valide && verification.horodatage_valide ? 'alert-success' : 'alert-danger'}`}>
+                                <div className="mb-2">
+                                    <strong>
+                                        {verification.signature_valide && verification.horodatage_valide
+                                            ? 'Signature authentique et valide'
+                                            : 'Signature invalide ou falsifiee'}
+                                    </strong>
+                                </div>
+                                <div style={{ fontSize: '0.88rem', lineHeight: '1.9' }}>
+                                    <div>Signataire : {verification.signataire}</div>
+                                    <div>Document : {verification.document}</div>
+                                    <div>Date : {new Date(verification.date).toLocaleString('fr-FR')}</div>
+                                    <div>
+                                        Signature RSA :{' '}
+                                        <span className={verification.signature_valide ? 'text-success' : 'text-danger'}>
+                                            {verification.signature_valide ? 'Valide' : 'Invalide'}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        Horodatage :{' '}
+                                        <span className={verification.horodatage_valide ? 'text-success' : 'text-danger'}>
+                                            {verification.horodatage_valide ? 'Valide' : 'Invalide'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 )}
+
+                <div className="d-flex gap-2 flex-wrap">
+                    {user.role === 'responsable' && monTour() && (
+                        <button className="btn btn-success" onClick={() => setAfficherModal(true)}>
+                            Signer ce document
+                        </button>
+                    )}
+
+                    {document.statut === 'signe' && (
+                        <button
+                            className="btn btn-outline-info"
+                            onClick={handleVerifier}
+                            disabled={verificationEnCours}
+                        >
+                            {verificationEnCours ? 'Verification...' : 'Verifier la signature'}
+                        </button>
+                    )}
+                </div>
             </div>
 
             {afficherModal && (
