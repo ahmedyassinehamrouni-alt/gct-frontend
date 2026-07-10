@@ -9,7 +9,7 @@ function DocumentDetail({ documentId, user, onRetour }) {
     const [afficherModal, setAfficherModal] = useState(false);
     const [clePrivee, setClePrivee] = useState('');
     const [enCours, setEnCours] = useState(false);
-    const [verification, setVerification] = useState(null);
+    const [verifications, setVerifications] = useState([]);
     const [verificationEnCours, setVerificationEnCours] = useState(false);
 
     const chargerDocument = async () => {
@@ -20,7 +20,7 @@ function DocumentDetail({ documentId, user, onRetour }) {
             ]);
             setDocument(docRes.data);
             setSigners(signersRes.data);
-            setVerification(null);
+            setVerifications([]);
         } catch (err) { console.error(err); }
     };
 
@@ -61,20 +61,33 @@ function DocumentDetail({ documentId, user, onRetour }) {
 
     const handleVerifier = async () => {
         setVerificationEnCours(true);
-        setVerification(null);
+        setVerifications([]);
         try {
+            // Get all signatures for this document
             const sigReponse = await api.get(`/signatures?document_id=${document.id}`);
             const signatures = sigReponse.data;
+
             if (!signatures || signatures.length === 0) {
-                setVerification({ erreur: 'Aucune signature trouvee pour ce document.' });
+                setVerifications([{ erreur: 'Aucune signature trouvee pour ce document.' }]);
                 return;
             }
-            const derniere = signatures[signatures.length - 1];
-            const verif = await api.get(`/signatures/verifier/${derniere.id}`);
-            setVerification(verif.data);
+
+            // Verify each signature individually
+            const results = await Promise.all(
+                signatures.map(async (sig) => {
+                    try {
+                        const verif = await api.get(`/signatures/verifier/${sig.id}`);
+                        return { ...verif.data, signature_id: sig.id };
+                    } catch (err) {
+                        return { erreur: `Erreur verification signature #${sig.id}`, signature_id: sig.id };
+                    }
+                })
+            );
+
+            setVerifications(results);
         } catch (err) {
             console.error(err);
-            setVerification({ erreur: 'Erreur lors de la verification.' });
+            setVerifications([{ erreur: 'Erreur lors de la verification.' }]);
         } finally {
             setVerificationEnCours(false);
         }
@@ -163,39 +176,34 @@ function DocumentDetail({ documentId, user, onRetour }) {
 
                 {message && <div className={`alert alert-${messageType}`}>{message}</div>}
 
-                {/* Verification result */}
-                {verification && (
-                    <div className="mt-3 mb-3">
-                        {verification.erreur ? (
-                            <div className="alert alert-danger">{verification.erreur}</div>
-                        ) : (
-                            <div className={`alert ${verification.signature_valide && verification.horodatage_valide ? 'alert-success' : 'alert-danger'}`}>
-                                <div className="mb-2">
-                                    <strong>
-                                        {verification.signature_valide && verification.horodatage_valide
-                                            ? 'Signature authentique et valide'
-                                            : 'Signature invalide ou falsifiee'}
-                                    </strong>
-                                </div>
-                                <div style={{ fontSize: '0.88rem', lineHeight: '1.9' }}>
-                                    <div>Signataire : {verification.signataire}</div>
-                                    <div>Document : {verification.document}</div>
-                                    <div>Date : {new Date(verification.date).toLocaleString('fr-FR')}</div>
-                                    <div>
-                                        Signature RSA :{' '}
-                                        <span className={verification.signature_valide ? 'text-success' : 'text-danger'}>
-                                            {verification.signature_valide ? 'Valide' : 'Invalide'}
-                                        </span>
-                                    </div>
-                                    <div>
-                                        Horodatage :{' '}
-                                        <span className={verification.horodatage_valide ? 'text-success' : 'text-danger'}>
-                                            {verification.horodatage_valide ? 'Valide' : 'Invalide'}
-                                        </span>
-                                    </div>
-                                </div>
+                {/* Verification results — one per signature */}
+                {verifications.length > 0 && (
+                    <div className="mb-3">
+                        <small className="text-muted fw-bold d-block mb-2">
+                            Resultats de verification ({verifications.length} signature{verifications.length > 1 ? 's' : ''}) :
+                        </small>
+                        {verifications.map((v, i) => (
+                            <div key={i} className={`alert ${v.erreur ? 'alert-danger' : (v.signature_valide && v.horodatage_valide ? 'alert-success' : 'alert-danger')} mb-2 py-2`}>
+                                {v.erreur ? (
+                                    <span>{v.erreur}</span>
+                                ) : (
+                                    <>
+                                        <div className="fw-bold mb-1" style={{ fontSize: '0.88rem' }}>
+                                            {v.signature_valide && v.horodatage_valide ? '✔ Authentique' : '✘ Invalide'} — {v.signataire}
+                                        </div>
+                                        <div style={{ fontSize: '0.82rem', lineHeight: '1.7' }}>
+                                            <span>Date : {new Date(v.date).toLocaleString('fr-FR')}</span>
+                                            <span className="ms-3">
+                                                RSA : <span className={v.signature_valide ? 'text-success' : 'text-danger'}>{v.signature_valide ? 'Valide' : 'Invalide'}</span>
+                                            </span>
+                                            <span className="ms-3">
+                                                Horodatage : <span className={v.horodatage_valide ? 'text-success' : 'text-danger'}>{v.horodatage_valide ? 'Valide' : 'Invalide'}</span>
+                                            </span>
+                                        </div>
+                                    </>
+                                )}
                             </div>
-                        )}
+                        ))}
                     </div>
                 )}
 
@@ -212,7 +220,7 @@ function DocumentDetail({ documentId, user, onRetour }) {
                             onClick={handleVerifier}
                             disabled={verificationEnCours}
                         >
-                            {verificationEnCours ? 'Verification...' : 'Verifier la signature'}
+                            {verificationEnCours ? 'Verification...' : 'Verifier toutes les signatures'}
                         </button>
                     )}
                 </div>
