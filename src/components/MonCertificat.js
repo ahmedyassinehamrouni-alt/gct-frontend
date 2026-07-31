@@ -8,16 +8,17 @@ function MonCertificat({ user, onRetour }) {
     const [erreur, setErreur] = useState('');
 
     useEffect(() => {
-        const charger = async () => {
-            try {
-                const reponse = await api.get(`/certificat/${user.id}`);
-                setCertificat(reponse.data);
-            } catch (err) {
-                setErreur("Aucun certificat trouvé. Connectez-vous une première fois pour en générer un.");
-            }
-        };
-        charger();
-    }, [user.id]);
+    if (!user?.id) return; // don't call the API until user is actually loaded
+    const charger = async () => {
+        try {
+            const reponse = await api.get(`/certificat/${user.id}`);
+            setCertificat(reponse.data);
+        } catch (err) {
+            setErreur("Aucun certificat trouvé. Connectez-vous une première fois pour en générer un.");
+        }
+    };
+    charger();
+}, [user?.id]);
 
     return (
         <div className="page-container" style={{ maxWidth: '640px' }}>
