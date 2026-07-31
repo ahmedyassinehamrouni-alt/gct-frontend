@@ -1,83 +1,79 @@
 import React, { useEffect, useState } from 'react';
 import api from '../api';
 
-// Ce composant affiche la liste de tous les documents,
-// avec une barre de recherche simple par titre.
 function DocumentList({ onVoirDocument }) {
     const [documents, setDocuments] = useState([]);
     const [recherche, setRecherche] = useState('');
 
-    // Cette fonction va chercher les documents auprès du backend
     const chargerDocuments = async () => {
         try {
-            const reponse = await api.get('/documents', {
-                params: { recherche }
-            });
+            const reponse = await api.get('/documents', { params: { recherche } });
             setDocuments(reponse.data);
-        } catch (err) {
-            console.error(err);
-        }
+        } catch (err) { console.error(err); }
     };
 
-    // On charge les documents une première fois quand le composant s'affiche,
-    // puis chaque fois que le texte de recherche change.
-    useEffect(() => {
-        chargerDocuments();
-    }, [recherche]);
+    useEffect(() => { chargerDocuments(); }, [recherche]);
 
     return (
-        <div className="page-container">
-            <h3 className="mb-3">Liste des documents</h3>
+        <div>
+            <div className="page-header">
+                <div className="page-title">Documents</div>
+                <div className="page-subtitle">Liste de tous les documents soumis dans le systeme</div>
+            </div>
 
-            {/* Barre de recherche simple */}
-            <input
-                type="text"
-                className="form-control mb-3"
-                placeholder="Rechercher un document par titre..."
-                value={recherche}
-                onChange={(e) => setRecherche(e.target.value)}
-            />
+            <div className="gct-card">
+                <div className="gct-search">
+                    <svg className="gct-search-icon" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <input
+                        type="text"
+                        placeholder="Rechercher par titre..."
+                        value={recherche}
+                        onChange={e => setRecherche(e.target.value)}
+                    />
+                </div>
 
-            <table className="table table-hover">
-                <thead className="table-dark">
-                    <tr>
-                        <th>Titre</th>
-                        <th>Auteur</th>
-                        <th>Date de création</th>
-                        <th>Statut</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {documents.map((doc) => (
-                        <tr key={doc.id}>
-                            <td>{doc.titre}</td>
-                            <td>{doc.auteur_prenom} {doc.auteur_nom}</td>
-                            <td>{new Date(doc.date_creation).toLocaleString()}</td>
-                            <td>
-                                {doc.statut === 'signe' ? (
-                                    <span className="badge bg-success">Signé</span>
-                                ) : (
-                                    <span className="badge bg-warning text-dark">En attente</span>
-                                )}
-                            </td>
-                            <td>
-                                <button className="btn btn-sm btn-primary" onClick={() => onVoirDocument(doc.id)}>
-                                    Consulter
-                                </button>
-                            </td>
-                        </tr>
-                    ))}
-
-                    {documents.length === 0 && (
+                <table className="doc-table">
+                    <thead>
                         <tr>
-                            <td colSpan="5" className="text-center text-muted">
-                                Aucun document trouvé.
-                            </td>
+                            <th>Titre</th>
+                            <th>Auteur</th>
+                            <th>Date de creation</th>
+                            <th>Statut</th>
+                            <th style={{ width: '80px' }}></th>
                         </tr>
-                    )}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {documents.map(doc => (
+                            <tr key={doc.id} onClick={() => onVoirDocument(doc.id)}>
+                                <td className="doc-title-cell">{doc.titre}</td>
+                                <td className="doc-author-cell">{doc.auteur_prenom} {doc.auteur_nom}</td>
+                                <td className="doc-date-cell">{new Date(doc.date_creation).toLocaleDateString('fr-FR')}</td>
+                                <td>
+                                    {doc.statut === 'signe' ? (
+                                        <span className="gct-badge gct-badge-success">Signe</span>
+                                    ) : (
+                                        <span className="gct-badge gct-badge-warning">En attente</span>
+                                    )}
+                                </td>
+                                <td>
+                                    <button className="gct-btn gct-btn-ghost gct-btn-sm">
+                                        Consulter
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                        {documents.length === 0 && (
+                            <tr>
+                                <td colSpan="5" className="history-empty">
+                                    Aucun document trouve.
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 }

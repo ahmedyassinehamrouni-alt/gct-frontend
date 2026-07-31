@@ -5,14 +5,14 @@ function DocumentDetail({ documentId, user, onRetour }) {
     const [document, setDocument] = useState(null);
     const [signers, setSigners] = useState([]);
     const [message, setMessage] = useState('');
-    const [messageType, setMessageType] = useState('info');
+    const [messageType, setMessageType] = useState('');
     const [afficherModal, setAfficherModal] = useState(false);
     const [clePrivee, setClePrivee] = useState('');
     const [enCours, setEnCours] = useState(false);
     const [verifications, setVerifications] = useState([]);
     const [verificationEnCours, setVerificationEnCours] = useState(false);
 
-    const chargerDocument = async () => {
+    const charger = async () => {
         try {
             const [docRes, signersRes] = await Promise.all([
                 api.get(`/documents/${documentId}`),
@@ -24,181 +24,109 @@ function DocumentDetail({ documentId, user, onRetour }) {
         } catch (err) { console.error(err); }
     };
 
-    useEffect(() => { chargerDocument(); }, [documentId]);
+    useEffect(() => { charger(); }, [documentId]);
 
     const monTour = () => {
         if (!document) return false;
-        const mySigner = signers.find(s => s.user_id === user.id);
-        if (!mySigner || mySigner.statut === 'signe') return false;
+        const me = signers.find(s => s.user_id === user.id);
+        if (!me || me.statut === 'signe') return false;
         if (!document.ordre_obligatoire) return true;
-        const precedents = signers.filter(s => s.ordre < mySigner.ordre);
-        return precedents.every(s => s.statut === 'signe');
+        return signers.filter(s => s.ordre < me.ordre).every(s => s.statut === 'signe');
     };
 
-    const handleConfirmerSignature = async () => {
+    const handleSigner = async () => {
         if (!clePrivee.trim()) { setMessage('Veuillez coller votre cle privee.'); setMessageType('danger'); return; }
         setEnCours(true);
         try {
-            await api.post('/signatures', {
-                document_id: document.id,
-                user_id: user.id,
-                nom_signataire: `${user.prenom} ${user.nom}`,
-                role: user.role,
-                cle_privee: clePrivee.trim()
-            });
-            setMessage('Document signe avec succes ! Le tampon a ete ajoute au PDF.');
-            setMessageType('success');
-            setAfficherModal(false);
-            setClePrivee('');
-            chargerDocument();
+            await api.post('/signatures', { document_id: document.id, user_id: user.id, nom_signataire: `${user.prenom} ${user.nom}`, role: user.role, cle_privee: clePrivee.trim() });
+            setMessage('Document signe avec succes.'); setMessageType('success');
+            setAfficherModal(false); setClePrivee(''); charger();
         } catch (err) {
-            console.error(err);
-            setMessage('Erreur lors de la signature. Verifiez votre cle privee.');
-            setMessageType('danger');
-            setAfficherModal(false);
+            setMessage('Erreur de signature. Verifiez votre cle privee.'); setMessageType('danger'); setAfficherModal(false);
         } finally { setEnCours(false); }
     };
 
     const handleVerifier = async () => {
-        setVerificationEnCours(true);
-        setVerifications([]);
+        setVerificationEnCours(true); setVerifications([]);
         try {
-            // Get all signatures for this document
-            const sigReponse = await api.get(`/signatures?document_id=${document.id}`);
-            const signatures = sigReponse.data;
-
-            if (!signatures || signatures.length === 0) {
-                setVerifications([{ erreur: 'Aucune signature trouvee pour ce document.' }]);
-                return;
-            }
-
-            // Verify each signature individually
-            const results = await Promise.all(
-                signatures.map(async (sig) => {
-                    try {
-                        const verif = await api.get(`/signatures/verifier/${sig.id}`);
-                        return { ...verif.data, signature_id: sig.id };
-                    } catch (err) {
-                        return { erreur: `Erreur verification signature #${sig.id}`, signature_id: sig.id };
-                    }
-                })
-            );
-
+            const res = await api.get(`/signatures?document_id=${document.id}`);
+            const sigs = res.data;
+            if (!sigs || sigs.length === 0) { setVerifications([{ erreur: 'Aucune signature trouvee.' }]); return; }
+            const results = await Promise.all(sigs.map(async sig => {
+                try { const v = await api.get(`/signatures/verifier/${sig.id}`); return { ...v.data, id: sig.id }; }
+                catch { return { erreur: `Erreur verification #${sig.id}`, id: sig.id }; }
+            }));
             setVerifications(results);
-        } catch (err) {
-            console.error(err);
-            setVerifications([{ erreur: 'Erreur lors de la verification.' }]);
-        } finally {
-            setVerificationEnCours(false);
-        }
+        } catch { setVerifications([{ erreur: 'Erreur lors de la verification.' }]); }
+        finally { setVerificationEnCours(false); }
     };
 
     const signeCount = signers.filter(s => s.statut === 'signe').length;
-    const totalSigners = signers.length;
 
-    if (!document) return <div className="page-container">Chargement...</div>;
+    if (!document) return <div style={{ padding: 40, color: 'var(--text-muted)' }}>Chargement...</div>;
 
     return (
-        <div className="page-container" style={{ maxWidth: '640px' }}>
-            <button className="btn btn-secondary btn-sm mb-3" onClick={onRetour}>
-                Retour a la liste
-            </button>
+        <div>
+            <div className="page-header" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                <button className="gct-btn gct-btn-ghost gct-btn-sm" onClick={onRetour}>
+                    <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                    Retour
+                </button>
+                <div>
+                    <div className="page-title">{document.titre}</div>
+                    <div className="page-subtitle">Cree par {document.auteur_prenom} {document.auteur_nom} le {new Date(document.date_creation).toLocaleString('fr-FR')}</div>
+                </div>
+            </div>
 
-            <div className="card card-accent p-4">
-                <h3>{document.titre}</h3>
-                <p className="text-muted">
-                    Cree par {document.auteur_prenom} {document.auteur_nom} le{' '}
-                    {new Date(document.date_creation).toLocaleString()}
-                </p>
-                <p>{document.description}</p>
+            <div className="gct-card" style={{ maxWidth: 620 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+                    {document.statut === 'signe'
+                        ? <span className="gct-badge gct-badge-success">Signe</span>
+                        : <span className="gct-badge gct-badge-warning">En attente</span>}
+                    <a className="pdf-link" href={`https://gct-backend-production.up.railway.app/uploads/${document.fichier_pdf}?t=${Date.now()}`} target="_blank" rel="noreferrer">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        Voir le fichier PDF
+                    </a>
+                </div>
 
-                <p>
-                    Statut :{' '}
-                    {document.statut === 'signe' ? (
-                        <span className="badge bg-success">Signe</span>
-                    ) : (
-                        <span className="badge bg-warning text-dark">En attente</span>
-                    )}
-                </p>
-
-                <a
-                    className="btn btn-outline-primary mb-3"
-                    href={`https://gct-backend-production.up.railway.app/uploads/${document.fichier_pdf}?t=${Date.now()}`}
-                    target="_blank"
-                    rel="noreferrer"
-                >
-                    Voir le fichier PDF
-                </a>
-
-                {/* Signing progress */}
                 {signers.length > 0 && (
-                    <div className="mb-3">
-                        <div className="d-flex justify-content-between align-items-center mb-2">
-                            <small className="text-muted fw-bold">
-                                Signatures : {signeCount}/{totalSigners}
-                                {document.ordre_obligatoire && (
-                                    <span className="badge bg-secondary ms-2" style={{ fontSize: '0.7rem' }}>Ordre obligatoire</span>
-                                )}
-                            </small>
+                    <div className="signing-progress">
+                        <div className="signing-progress-header">
+                            Signatures — {signeCount}/{signers.length}
+                            {document.ordre_obligatoire && <span className="gct-badge gct-badge-muted" style={{ marginLeft: 8 }}>Ordre obligatoire</span>}
                         </div>
-                        {signers
-                            .sort((a, b) => a.ordre - b.ordre)
-                            .map((s, index) => {
-                                const estSigne = s.statut === 'signe';
-                                const estMoi = s.user_id === user.id;
-                                const precedentsSigne = !document.ordre_obligatoire || signers.filter(x => x.ordre < s.ordre).every(x => x.statut === 'signe');
-                                return (
-                                    <div key={s.id} className="d-flex align-items-center gap-2 mb-2 p-2"
-                                        style={{ background: estSigne ? '#f0fdf4' : '#fafafa', borderRadius: '8px', border: `1px solid ${estSigne ? '#86efac' : '#e9ecef'}` }}>
-                                        {document.ordre_obligatoire && (
-                                            <span className="badge" style={{ background: estSigne ? '#22c55e' : '#94a3b8', minWidth: '22px' }}>
-                                                {index + 1}
-                                            </span>
-                                        )}
-                                        <span style={{ flex: 1, fontSize: '0.9rem' }}>
-                                            {s.prenom} {s.nom}
-                                            {estMoi && <span className="text-primary ms-1" style={{ fontSize: '0.75rem' }}>(vous)</span>}
-                                        </span>
-                                        {estSigne ? (
-                                            <span style={{ color: '#22c55e', fontSize: '0.85rem' }}>
-                                                Signe {s.date_signature ? new Date(s.date_signature).toLocaleDateString('fr-FR') : ''}
-                                            </span>
-                                        ) : precedentsSigne ? (
-                                            <span className="badge bg-warning text-dark">En attente</span>
-                                        ) : (
-                                            <span className="badge bg-secondary">En attente du precedent</span>
-                                        )}
-                                    </div>
-                                );
-                            })}
+                        {signers.sort((a, b) => a.ordre - b.ordre).map((s, i) => {
+                            const estSigne = s.statut === 'signe';
+                            const estMoi = s.user_id === user.id;
+                            const sonTour = !document.ordre_obligatoire || signers.filter(x => x.ordre < s.ordre).every(x => x.statut === 'signe');
+                            return (
+                                <div key={s.id} className={`signer-row${estSigne ? ' signed' : ''}`}>
+                                    {document.ordre_obligatoire && <div className="signer-order-badge" style={{ background: estSigne ? 'var(--success)' : 'var(--text-muted)' }}>{i + 1}</div>}
+                                    <span className="signer-name">{s.prenom} {s.nom}{estMoi && <span className="signer-you">(vous)</span>}</span>
+                                    {estSigne
+                                        ? <span className="gct-badge gct-badge-success">Signe {s.date_signature ? new Date(s.date_signature).toLocaleDateString('fr-FR') : ''}</span>
+                                        : sonTour ? <span className="gct-badge gct-badge-warning">En attente</span>
+                                        : <span className="gct-badge gct-badge-muted">En attente du precedent</span>}
+                                </div>
+                            );
+                        })}
                     </div>
                 )}
 
-                {message && <div className={`alert alert-${messageType}`}>{message}</div>}
+                {message && <div className={`gct-alert gct-alert-${messageType}`}>{message}</div>}
 
-                {/* Verification results — one per signature */}
                 {verifications.length > 0 && (
-                    <div className="mb-3">
-                        <small className="text-muted fw-bold d-block mb-2">
-                            Resultats de verification ({verifications.length} signature{verifications.length > 1 ? 's' : ''}) :
-                        </small>
+                    <div style={{ marginBottom: 16 }}>
+                        <div className="signing-progress-header" style={{ marginBottom: 8 }}>Resultats de verification</div>
                         {verifications.map((v, i) => (
-                            <div key={i} className={`alert ${v.erreur ? 'alert-danger' : (v.signature_valide && v.horodatage_valide ? 'alert-success' : 'alert-danger')} mb-2 py-2`}>
-                                {v.erreur ? (
-                                    <span>{v.erreur}</span>
-                                ) : (
+                            <div key={i} className={`verify-result ${v.erreur ? 'fail' : (v.signature_valide && v.horodatage_valide ? 'ok' : 'fail')}`}>
+                                {v.erreur ? <span>{v.erreur}</span> : (
                                     <>
-                                        <div className="fw-bold mb-1" style={{ fontSize: '0.88rem' }}>
-                                            {v.signature_valide && v.horodatage_valide ? '✔ Authentique' : '✘ Invalide'} — {v.signataire}
-                                        </div>
-                                        <div style={{ fontSize: '0.82rem', lineHeight: '1.7' }}>
+                                        <div className="verify-result-name">{v.signature_valide && v.horodatage_valide ? 'Authentique' : 'Invalide'} — {v.signataire}</div>
+                                        <div className="verify-result-meta">
                                             <span>Date : {new Date(v.date).toLocaleString('fr-FR')}</span>
-                                            <span className="ms-3">
-                                                RSA : <span className={v.signature_valide ? 'text-success' : 'text-danger'}>{v.signature_valide ? 'Valide' : 'Invalide'}</span>
-                                            </span>
-                                            <span className="ms-3">
-                                                Horodatage : <span className={v.horodatage_valide ? 'text-success' : 'text-danger'}>{v.horodatage_valide ? 'Valide' : 'Invalide'}</span>
-                                            </span>
+                                            <span>RSA : <strong>{v.signature_valide ? 'Valide' : 'Invalide'}</strong></span>
+                                            <span>Horodatage : <strong>{v.horodatage_valide ? 'Valide' : 'Invalide'}</strong></span>
                                         </div>
                                     </>
                                 )}
@@ -207,44 +135,31 @@ function DocumentDetail({ documentId, user, onRetour }) {
                     </div>
                 )}
 
-                <div className="d-flex gap-2 flex-wrap">
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                     {user.role === 'responsable' && monTour() && (
-                        <button className="btn btn-success" onClick={() => setAfficherModal(true)}>
-                            Signer ce document
-                        </button>
+                        <button className="gct-btn gct-btn-success" onClick={() => setAfficherModal(true)}>Signer ce document</button>
                     )}
-
                     {document.statut === 'signe' && (
-                        <button
-                            className="btn btn-outline-info"
-                            onClick={handleVerifier}
-                            disabled={verificationEnCours}
-                        >
-                            {verificationEnCours ? 'Verification...' : 'Verifier toutes les signatures'}
+                        <button className="gct-btn gct-btn-ghost" onClick={handleVerifier} disabled={verificationEnCours}>
+                            {verificationEnCours ? 'Verification...' : 'Verifier les signatures'}
                         </button>
                     )}
                 </div>
             </div>
 
             {afficherModal && (
-                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-                    <div style={{ background: 'white', borderRadius: '12px', padding: '2rem', width: '500px', maxWidth: '90vw' }}>
-                        <h5 className="mb-1">Confirmer la signature</h5>
-                        <p className="text-muted mb-3" style={{ fontSize: '0.9rem' }}>
-                            Collez votre cle privee (.pem) pour signer <strong>{document.titre}</strong>.
-                        </p>
-                        <textarea className="form-control mb-3" rows={8}
-                            placeholder={"-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----"}
-                            value={clePrivee} onChange={e => setClePrivee(e.target.value)}
-                            style={{ fontFamily: 'monospace', fontSize: '11px' }} />
-                        <div className="d-flex gap-2">
-                            <button className="btn btn-success w-100" onClick={handleConfirmerSignature} disabled={enCours}>
-                                {enCours ? 'Signature en cours...' : 'Confirmer la signature'}
+                <div className="gct-modal-overlay">
+                    <div className="gct-modal">
+                        <div className="gct-modal-title">Confirmer la signature</div>
+                        <div className="gct-modal-sub">Collez votre cle privee PEM pour signer <strong>{document.titre}</strong>.</div>
+                        <textarea className="gct-input gct-textarea" rows={8} style={{ fontFamily: 'monospace', fontSize: 11, minHeight: 160 }}
+                            placeholder="-----BEGIN RSA PRIVATE KEY-----&#10;...&#10;-----END RSA PRIVATE KEY-----"
+                            value={clePrivee} onChange={e => setClePrivee(e.target.value)} />
+                        <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+                            <button className="gct-btn gct-btn-success" style={{ flex: 1, justifyContent: 'center' }} onClick={handleSigner} disabled={enCours}>
+                                {enCours ? 'Signature en cours...' : 'Confirmer'}
                             </button>
-                            <button className="btn btn-outline-secondary w-100"
-                                onClick={() => { setAfficherModal(false); setClePrivee(''); }} disabled={enCours}>
-                                Annuler
-                            </button>
+                            <button className="gct-btn gct-btn-ghost" style={{ flex: 1, justifyContent: 'center' }} onClick={() => { setAfficherModal(false); setClePrivee(''); }} disabled={enCours}>Annuler</button>
                         </div>
                     </div>
                 </div>
