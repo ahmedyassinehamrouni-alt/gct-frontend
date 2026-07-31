@@ -51,8 +51,8 @@ function DocumentList({ onVoirDocument }) {
                                 <td className="doc-author-cell">{doc.auteur_prenom} {doc.auteur_nom}</td>
                                 <td className="doc-date-cell">{new Date(doc.date_creation).toLocaleDateString('fr-FR')}</td>
                                 <td>
-                                    {doc.statut === 'signe' ? (
-                                        <span className="gct-badge gct-badge-success">Signe</span>
+                                    {doc.statut === 'signé' ? (
+                                        <span className="gct-badge gct-badge-success">Signé</span>
                                     ) : (
                                         <span className="gct-badge gct-badge-warning">En attente</span>
                                     )}

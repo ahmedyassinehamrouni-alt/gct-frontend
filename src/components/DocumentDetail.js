@@ -31,7 +31,7 @@ function DocumentDetail({ documentId, user, onRetour }) {
         const me = signers.find(s => s.user_id === user.id);
         if (!me || me.statut === 'signe') return false;
         if (!document.ordre_obligatoire) return true;
-        return signers.filter(s => s.ordre < me.ordre).every(s => s.statut === 'signe');
+        return signers.filter(s => s.ordre < me.ordre).every(s => s.statut === 'signé');
     };
 
     const handleSigner = async () => {
@@ -39,7 +39,7 @@ function DocumentDetail({ documentId, user, onRetour }) {
         setEnCours(true);
         try {
             await api.post('/signatures', { document_id: document.id, user_id: user.id, nom_signataire: `${user.prenom} ${user.nom}`, role: user.role, cle_privee: clePrivee.trim() });
-            setMessage('Document signe avec succes.'); setMessageType('success');
+            setMessage('Document signé avec succes.'); setMessageType('success');
             setAfficherModal(false); setClePrivee(''); charger();
         } catch (err) {
             setMessage('Erreur de signature. Verifiez votre cle privee.'); setMessageType('danger'); setAfficherModal(false);
@@ -61,7 +61,7 @@ function DocumentDetail({ documentId, user, onRetour }) {
         finally { setVerificationEnCours(false); }
     };
 
-    const signeCount = signers.filter(s => s.statut === 'signe').length;
+    const signeCount = signers.filter(s => s.statut === 'signé').length;
 
     if (!document) return <div style={{ padding: 40, color: 'var(--text-muted)' }}>Chargement...</div>;
 
@@ -74,14 +74,14 @@ function DocumentDetail({ documentId, user, onRetour }) {
                 </button>
                 <div>
                     <div className="page-title">{document.titre}</div>
-                    <div className="page-subtitle">Cree par {document.auteur_prenom} {document.auteur_nom} le {new Date(document.date_creation).toLocaleString('fr-FR')}</div>
+                    <div className="page-subtitle">Créé par {document.auteur_prenom} {document.auteur_nom} le {new Date(document.date_creation).toLocaleString('fr-FR')}</div>
                 </div>
             </div>
 
             <div className="gct-card" style={{ maxWidth: 620 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-                    {document.statut === 'signe'
-                        ? <span className="gct-badge gct-badge-success">Signe</span>
+                    {document.statut === 'signé'
+                        ? <span className="gct-badge gct-badge-success">Signé</span>
                         : <span className="gct-badge gct-badge-warning">En attente</span>}
                     <a className="pdf-link" href={`https://gct-backend-production.up.railway.app/uploads/${document.fichier_pdf}?t=${Date.now()}`} target="_blank" rel="noreferrer">
                         <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
@@ -96,15 +96,15 @@ function DocumentDetail({ documentId, user, onRetour }) {
                             {document.ordre_obligatoire && <span className="gct-badge gct-badge-muted" style={{ marginLeft: 8 }}>Ordre obligatoire</span>}
                         </div>
                         {signers.sort((a, b) => a.ordre - b.ordre).map((s, i) => {
-                            const estSigne = s.statut === 'signe';
+                            const estSigne = s.statut === 'signé';
                             const estMoi = s.user_id === user.id;
-                            const sonTour = !document.ordre_obligatoire || signers.filter(x => x.ordre < s.ordre).every(x => x.statut === 'signe');
+                            const sonTour = !document.ordre_obligatoire || signers.filter(x => x.ordre < s.ordre).every(x => x.statut === 'signé');
                             return (
                                 <div key={s.id} className={`signer-row${estSigne ? ' signed' : ''}`}>
                                     {document.ordre_obligatoire && <div className="signer-order-badge" style={{ background: estSigne ? 'var(--success)' : 'var(--text-muted)' }}>{i + 1}</div>}
                                     <span className="signer-name">{s.prenom} {s.nom}{estMoi && <span className="signer-you">(vous)</span>}</span>
                                     {estSigne
-                                        ? <span className="gct-badge gct-badge-success">Signe {s.date_signature ? new Date(s.date_signature).toLocaleDateString('fr-FR') : ''}</span>
+                                        ? <span className="gct-badge gct-badge-success">Signé {s.date_signature ? new Date(s.date_signature).toLocaleDateString('fr-FR') : ''}</span>
                                         : sonTour ? <span className="gct-badge gct-badge-warning">En attente</span>
                                         : <span className="gct-badge gct-badge-muted">En attente du precedent</span>}
                                 </div>
@@ -139,7 +139,7 @@ function DocumentDetail({ documentId, user, onRetour }) {
                     {user.role === 'responsable' && monTour() && (
                         <button className="gct-btn gct-btn-success" onClick={() => setAfficherModal(true)}>Signer ce document</button>
                     )}
-                    {document.statut === 'signe' && (
+                    {document.statut === 'signé' && (
                         <button className="gct-btn gct-btn-ghost" onClick={handleVerifier} disabled={verificationEnCours}>
                             {verificationEnCours ? 'Verification...' : 'Verifier les signatures'}
                         </button>
