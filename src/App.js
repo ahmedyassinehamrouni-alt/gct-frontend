@@ -7,6 +7,7 @@ import DocumentList from './components/DocumentList';
 import DocumentForm from './components/DocumentForm';
 import DocumentDetail from './components/DocumentDetail';
 import SignatureHistory from './components/SignatureHistory';
+import MonCertificat from './components/MonCertificat';
 
 function App() {
     const [user, setUser] = useState(null);
@@ -66,11 +67,12 @@ function App() {
         <div className="app-layout">
             <Navbar user={user} onNaviguer={(p) => { setPage(p); }} onDeconnexion={handleDeconnexion} activePage={page} />
             <main className="main-content">
-                {page === 'liste' && <DocumentList onVoirDocument={handleVoirDocument} />}
-                {page === 'creer' && <DocumentForm user={user} onDocumentCree={() => setPage('liste')} />}
-                {page === 'detail' && <DocumentDetail documentId={documentId} user={user} onRetour={() => setPage('liste')} />}
-                {page === 'historique' && <SignatureHistory />}
-            </main>
+    {page === 'liste' && <DocumentList onVoirDocument={handleVoirDocument} />}
+    {page === 'creer' && <DocumentForm user={user} onDocumentCree={() => setPage('liste')} />}
+    {page === 'detail' && <DocumentDetail documentId={documentId} user={user} onRetour={() => setPage('liste')} />}
+    {page === 'historique' && <SignatureHistory />}
+    {page === 'certificat' && <MonCertificat user={user} onRetour={() => setPage('liste')} />}
+</main>
         </div>
     );
 }
