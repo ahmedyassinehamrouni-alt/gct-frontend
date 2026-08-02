@@ -12,8 +12,8 @@ function DocumentForm({ user, onDocumentCree }) {
     const [ordreObligatoire, setOrdreObligatoire] = useState(false);
 
     useEffect(() => {
-        api.get('/users/responsables').then(r => setResponsables(r.data)).catch(console.error);
-    }, []);
+        api.get('/users/responsables').then(r => setResponsables(r.data.filter(x => x.id !== user.id))).catch(console.error);
+    }, [user.id]);
 
     const ajouter = (r) => {
         if (signers.length >= 5 || signers.find(s => s.user_id === r.id)) return;

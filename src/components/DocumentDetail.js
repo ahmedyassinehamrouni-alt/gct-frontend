@@ -106,6 +106,27 @@ function DocumentDetail({ documentId, user, onRetour }) {
 
     const signeCount = signers.filter(s => s.statut === 'signe').length;
 
+    const construireHistorique = () => {
+        if (!document) return [];
+        const evenements = [];
+        evenements.push({ date: document.date_creation, type: 'cree', label: `Document créé par ${document.auteur_prenom} ${document.auteur_nom}` });
+        commentaires.forEach(c => evenements.push({ date: c.created_at, type: 'commentaire', label: `${c.nom_auteur} a commenté`, detail: c.contenu }));
+        signers.forEach(s => {
+            if (s.statut === 'signe' && s.date_signature) evenements.push({ date: s.date_signature, type: 'signe', label: `${s.prenom} ${s.nom} a signé` });
+            if (s.statut === 'refuse' && s.date_refus) evenements.push({ date: s.date_refus, type: 'refuse', label: `${s.prenom} ${s.nom} a refusé`, detail: s.motif_refus });
+        });
+        return evenements.sort((a, b) => new Date(a.date) - new Date(b.date));
+    };
+    const historique = construireHistorique();
+
+    const iconePourType = (type) => {
+        if (type === 'signe') return <svg width="13" height="13" fill="none" stroke="white" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>;
+        if (type === 'refuse') return <svg width="13" height="13" fill="none" stroke="white" strokeWidth="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
+        if (type === 'commentaire') return <svg width="13" height="13" fill="none" stroke="white" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>;
+        return <svg width="13" height="13" fill="none" stroke="white" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>;
+    };
+    const couleurPourType = (type) => type === 'signe' ? 'var(--success)' : type === 'refuse' ? 'var(--danger)' : type === 'commentaire' ? '#8b5cf6' : 'var(--primary, #2563eb)';
+
     if (!document) return <div style={{ padding: 40, color: 'var(--text-muted)' }}>Chargement...</div>;
 
     const statutBadge = () => {
@@ -257,6 +278,23 @@ function DocumentDetail({ documentId, user, onRetour }) {
                         </button>
                     </div>
                 )}
+            </div>
+
+            {/* Historique detaille du document */}
+            <div className="gct-card" style={{ maxWidth: 720 }}>
+                <div className="signing-progress-header" style={{ marginBottom: 12 }}>Historique détaillé</div>
+                <div className="doc-timeline">
+                    {historique.map((ev, i) => (
+                        <div key={i} className="doc-timeline-item">
+                            <div className="doc-timeline-dot" style={{ background: couleurPourType(ev.type) }}>{iconePourType(ev.type)}</div>
+                            <div className="doc-timeline-content">
+                                <div className="doc-timeline-label">{ev.label}</div>
+                                {ev.detail && <div className="doc-timeline-detail">{ev.detail}</div>}
+                                <div className="doc-timeline-date">{new Date(ev.date).toLocaleString('fr-FR')}</div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
 
             {afficherModal && (
