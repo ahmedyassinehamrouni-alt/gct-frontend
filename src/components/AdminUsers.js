@@ -69,7 +69,7 @@ function AdminUsers({ user }) {
         setEditId(u.id); setEditPoste(u.poste || ''); setEditDepartement(u.departement || ''); setEditRoleApp(u.role_app);
     };
 
-    const sauverEdition = async (id) => {
+    const EnregisterEdition = async (id) => {
         try {
             await api.put(`/admin/users/${id}`, {
                 poste: editPoste, departement: editDepartement, role_app: editRoleApp
@@ -212,7 +212,7 @@ function AdminUsers({ user }) {
                                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                                         {editId === u.id ? (
                                             <>
-                                                <button className="gct-btn gct-btn-success gct-btn-sm" onClick={() => sauverEdition(u.id)}>Sauver</button>
+                                                <button className="gct-btn gct-btn-success gct-btn-sm" onClick={() => EnregisterEdition(u.id)}>Enregister</button>
                                                 <button className="gct-btn gct-btn-ghost gct-btn-sm" onClick={() => setEditId(null)}>Annuler</button>
                                             </>
                                         ) : (
