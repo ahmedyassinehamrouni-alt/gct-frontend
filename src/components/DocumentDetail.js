@@ -12,14 +12,28 @@ function DocumentDetail({ documentId, user, onRetour }) {
     const [verifications, setVerifications] = useState([]);
     const [verificationEnCours, setVerificationEnCours] = useState(false);
 
+    // --- Refus de signature ---
+    const [afficherModalRefus, setAfficherModalRefus] = useState(false);
+    const [motifRefus, setMotifRefus] = useState('');
+    const [refusEnCours, setRefusEnCours] = useState(false);
+
+    // --- Commentaires / annotations ---
+    const [commentaires, setCommentaires] = useState([]);
+    const [nouveauCommentaire, setNouveauCommentaire] = useState('');
+    const [commentaireEnCours, setCommentaireEnCours] = useState(false);
+
+    const pdfUrl = (doc) => `https://gct-backend-production.up.railway.app/uploads/${doc.fichier_pdf}?t=${Date.now()}`;
+
     const charger = async () => {
         try {
-            const [docRes, signersRes] = await Promise.all([
+            const [docRes, signersRes, commentsRes] = await Promise.all([
                 api.get(`/documents/${documentId}`),
-                api.get(`/documents/${documentId}/signers`)
+                api.get(`/documents/${documentId}/signers`),
+                api.get(`/documents/${documentId}/comments`)
             ]);
             setDocument(docRes.data);
             setSigners(signersRes.data);
+            setCommentaires(commentsRes.data);
             setVerifications([]);
         } catch (err) { console.error(err); }
     };
@@ -29,7 +43,7 @@ function DocumentDetail({ documentId, user, onRetour }) {
     const monTour = () => {
         if (!document) return false;
         const me = signers.find(s => s.user_id === user.id);
-        if (!me || me.statut === 'signe') return false;
+        if (!me || me.statut === 'signe' || me.statut === 'refuse') return false;
         if (!document.ordre_obligatoire) return true;
         return signers.filter(s => s.ordre < me.ordre).every(s => s.statut === 'signe');
     };
@@ -44,6 +58,35 @@ function DocumentDetail({ documentId, user, onRetour }) {
         } catch (err) {
             setMessage('Erreur de signature. Verifiez votre cle privee.'); setMessageType('danger'); setAfficherModal(false);
         } finally { setEnCours(false); }
+    };
+
+    const handleRefuser = async () => {
+        if (!motifRefus.trim()) { setMessage('Veuillez indiquer un motif de refus.'); setMessageType('danger'); return; }
+        setRefusEnCours(true);
+        try {
+            await api.post('/signatures/refuser', { document_id: document.id, user_id: user.id, role: user.role, motif: motifRefus.trim() });
+            setMessage('Document refuse.'); setMessageType('warning');
+            setAfficherModalRefus(false); setMotifRefus(''); charger();
+        } catch (err) {
+            setMessage(err.response?.data?.message || 'Erreur lors du refus.'); setMessageType('danger'); setAfficherModalRefus(false);
+        } finally { setRefusEnCours(false); }
+    };
+
+    const handleAjouterCommentaire = async () => {
+        if (!nouveauCommentaire.trim()) return;
+        setCommentaireEnCours(true);
+        try {
+            await api.post(`/documents/${document.id}/comments`, {
+                user_id: user.id,
+                nom_auteur: `${user.prenom} ${user.nom}`,
+                contenu: nouveauCommentaire.trim()
+            });
+            setNouveauCommentaire('');
+            const res = await api.get(`/documents/${document.id}/comments`);
+            setCommentaires(res.data);
+        } catch (err) {
+            setMessage("Erreur lors de l'ajout du commentaire."); setMessageType('danger');
+        } finally { setCommentaireEnCours(false); }
     };
 
     const handleVerifier = async () => {
@@ -65,6 +108,12 @@ function DocumentDetail({ documentId, user, onRetour }) {
 
     if (!document) return <div style={{ padding: 40, color: 'var(--text-muted)' }}>Chargement...</div>;
 
+    const statutBadge = () => {
+        if (document.statut === 'signe') return <span className="gct-badge gct-badge-success">signe</span>;
+        if (document.statut === 'refuse') return <span className="gct-badge gct-badge-danger">refuse</span>;
+        return <span className="gct-badge gct-badge-warning">En attente</span>;
+    };
+
     return (
         <div>
             <div className="page-header" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
@@ -78,16 +127,25 @@ function DocumentDetail({ documentId, user, onRetour }) {
                 </div>
             </div>
 
-            <div className="gct-card" style={{ maxWidth: 620 }}>
+            <div className="gct-card" style={{ maxWidth: 720 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-                    {document.statut === 'signe'
-                        ? <span className="gct-badge gct-badge-success">signe</span>
-                        : <span className="gct-badge gct-badge-warning">En attente</span>}
-                    <a className="pdf-link" href={`https://gct-backend-production.up.railway.app/uploads/${document.fichier_pdf}?t=${Date.now()}`} target="_blank" rel="noreferrer">
+                    {statutBadge()}
+                    <a className="pdf-link" href={pdfUrl(document)} target="_blank" rel="noreferrer">
                         <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                        Voir le fichier PDF
+                        Ouvrir dans un nouvel onglet
                     </a>
                 </div>
+
+                {/* Aperçu du PDF intégré */}
+                {document.fichier_pdf && (
+                    <div className="pdf-preview-wrapper">
+                        <iframe
+                            src={pdfUrl(document)}
+                            title={`Aperçu — ${document.titre}`}
+                            className="pdf-preview-frame"
+                        />
+                    </div>
+                )}
 
                 {signers.length > 0 && (
                     <div className="signing-progress">
@@ -97,19 +155,28 @@ function DocumentDetail({ documentId, user, onRetour }) {
                         </div>
                         {signers.sort((a, b) => a.ordre - b.ordre).map((s, i) => {
                             const estSigne = s.statut === 'signe';
+                            const estRefuse = s.statut === 'refuse';
                             const estMoi = s.user_id === user.id;
                             const sonTour = !document.ordre_obligatoire || signers.filter(x => x.ordre < s.ordre).every(x => x.statut === 'signe');
                             return (
-                                <div key={s.id} className={`signer-row${estSigne ? ' signed' : ''}`}>
-                                    {document.ordre_obligatoire && <div className="signer-order-badge" style={{ background: estSigne ? 'var(--success)' : 'var(--text-muted)' }}>{i + 1}</div>}
+                                <div key={s.id} className={`signer-row${estSigne ? ' signed' : ''}${estRefuse ? ' refused' : ''}`}>
+                                    {document.ordre_obligatoire && <div className="signer-order-badge" style={{ background: estSigne ? 'var(--success)' : estRefuse ? 'var(--danger)' : 'var(--text-muted)' }}>{i + 1}</div>}
                                     <span className="signer-name">{s.prenom} {s.nom}{estMoi && <span className="signer-you">(vous)</span>}</span>
                                     {estSigne
                                         ? <span className="gct-badge gct-badge-success">signe {s.date_signature ? new Date(s.date_signature).toLocaleDateString('fr-FR') : ''}</span>
+                                        : estRefuse ? <span className="gct-badge gct-badge-danger">refuse</span>
                                         : sonTour ? <span className="gct-badge gct-badge-warning">En attente</span>
                                         : <span className="gct-badge gct-badge-muted">En attente du precedent</span>}
                                 </div>
                             );
                         })}
+                        {signers.some(s => s.statut === 'refuse') && (
+                            <div className="gct-alert gct-alert-danger" style={{ marginTop: 10 }}>
+                                {signers.filter(s => s.statut === 'refuse').map(s => (
+                                    <div key={s.id}><strong>{s.prenom} {s.nom}</strong> a refusé : {s.motif_refus}</div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -139,12 +206,57 @@ function DocumentDetail({ documentId, user, onRetour }) {
                     {user.role === 'responsable' && monTour() && (
                         <button className="gct-btn gct-btn-success" onClick={() => setAfficherModal(true)}>Signer ce document</button>
                     )}
+                    {user.role === 'responsable' && monTour() && (
+                        <button className="gct-btn gct-btn-danger" onClick={() => setAfficherModalRefus(true)}>Refuser ce document</button>
+                    )}
                     {document.statut === 'signe' && (
                         <button className="gct-btn gct-btn-ghost" onClick={handleVerifier} disabled={verificationEnCours}>
                             {verificationEnCours ? 'Verification...' : 'Verifier les signatures'}
                         </button>
                     )}
                 </div>
+            </div>
+
+            {/* Commentaires / annotations avant signature */}
+            <div className="gct-card" style={{ maxWidth: 720 }}>
+                <div className="signing-progress-header" style={{ marginBottom: 12 }}>
+                    Commentaires ({commentaires.length})
+                </div>
+
+                <div className="comment-list">
+                    {commentaires.length === 0 && (
+                        <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>Aucun commentaire pour l'instant.</div>
+                    )}
+                    {commentaires.map(c => (
+                        <div key={c.id} className="comment-item">
+                            <div className="comment-item-header">
+                                <span className="comment-author">{c.nom_auteur}</span>
+                                <span className="comment-date">{new Date(c.created_at).toLocaleString('fr-FR')}</span>
+                            </div>
+                            <div className="comment-content">{c.contenu}</div>
+                        </div>
+                    ))}
+                </div>
+
+                {document.statut === 'en_attente' && (
+                    <div style={{ marginTop: 14 }}>
+                        <textarea
+                            className="gct-input gct-textarea"
+                            rows={3}
+                            placeholder="Ajouter une remarque avant de signer (ex: demander une correction)..."
+                            value={nouveauCommentaire}
+                            onChange={e => setNouveauCommentaire(e.target.value)}
+                        />
+                        <button
+                            className="gct-btn gct-btn-ghost gct-btn-sm"
+                            style={{ marginTop: 8 }}
+                            onClick={handleAjouterCommentaire}
+                            disabled={commentaireEnCours || !nouveauCommentaire.trim()}
+                        >
+                            {commentaireEnCours ? 'Envoi...' : 'Ajouter le commentaire'}
+                        </button>
+                    </div>
+                )}
             </div>
 
             {afficherModal && (
@@ -160,6 +272,24 @@ function DocumentDetail({ documentId, user, onRetour }) {
                                 {enCours ? 'Signature en cours...' : 'Confirmer'}
                             </button>
                             <button className="gct-btn gct-btn-ghost" style={{ flex: 1, justifyContent: 'center' }} onClick={() => { setAfficherModal(false); setClePrivee(''); }} disabled={enCours}>Annuler</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {afficherModalRefus && (
+                <div className="gct-modal-overlay">
+                    <div className="gct-modal">
+                        <div className="gct-modal-title">Refuser la signature</div>
+                        <div className="gct-modal-sub">Indiquez le motif du refus pour <strong>{document.titre}</strong>. L'auteur du document en sera informé.</div>
+                        <textarea className="gct-input gct-textarea" rows={4}
+                            placeholder="Ex : montant incorrect, document incomplet, informations manquantes..."
+                            value={motifRefus} onChange={e => setMotifRefus(e.target.value)} />
+                        <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+                            <button className="gct-btn gct-btn-danger" style={{ flex: 1, justifyContent: 'center' }} onClick={handleRefuser} disabled={refusEnCours}>
+                                {refusEnCours ? 'Envoi en cours...' : 'Confirmer le refus'}
+                            </button>
+                            <button className="gct-btn gct-btn-ghost" style={{ flex: 1, justifyContent: 'center' }} onClick={() => { setAfficherModalRefus(false); setMotifRefus(''); }} disabled={refusEnCours}>Annuler</button>
                         </div>
                     </div>
                 </div>

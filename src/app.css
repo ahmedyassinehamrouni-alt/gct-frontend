@@ -317,6 +317,74 @@ body {
   border: 1px solid rgba(77,100,128,0.2);
 }
 
+.gct-badge-danger {
+  background: var(--danger-light);
+  color: var(--danger);
+  border: 1px solid rgba(239,68,68,0.2);
+}
+
+/* ── APERCU PDF INTEGRE ── */
+.pdf-preview-wrapper {
+  margin-bottom: 20px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.pdf-preview-frame {
+  width: 100%;
+  height: 480px;
+  border: none;
+  display: block;
+  background: #525659;
+}
+
+/* ── SIGNATAIRE REFUSE ── */
+.signer-row.refused {
+  border-color: rgba(239,68,68,0.3);
+  background: var(--danger-light);
+}
+
+/* ── COMMENTAIRES ── */
+.comment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.comment-item {
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg-secondary, rgba(255,255,255,0.02));
+}
+
+.comment-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.comment-author {
+  font-weight: 600;
+  font-size: 12.5px;
+}
+
+.comment-date {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.comment-content {
+  font-size: 13px;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 /* ── BUTTONS ── */
 .gct-btn {
   display: inline-flex;
