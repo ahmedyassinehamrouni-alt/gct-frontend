@@ -12,6 +12,10 @@ function DocumentDetail({ documentId, user, onRetour }) {
     const [verifications, setVerifications] = useState([]);
     const [verificationEnCours, setVerificationEnCours] = useState(false);
 
+    // --- Suppression du document ---
+    const [afficherModalSuppression, setAfficherModalSuppression] = useState(false);
+    const [suppressionEnCours, setSuppressionEnCours] = useState(false);
+
     // --- Refus de signature ---
     const [afficherModalRefus, setAfficherModalRefus] = useState(false);
     const [motifRefus, setMotifRefus] = useState('');
@@ -72,6 +76,19 @@ function DocumentDetail({ documentId, user, onRetour }) {
         } finally { setRefusEnCours(false); }
     };
 
+    const handleSupprimer = async () => {
+        setSuppressionEnCours(true);
+        try {
+            await api.delete(`/documents/${document.id}`, {
+                params: { user_id: user.id, role_app: user.role_app, departement: user.departement || '' }
+            });
+            onRetour();
+        } catch (err) {
+            setMessage(err.response?.data?.message || 'Erreur lors de la suppression.'); setMessageType('danger');
+            setAfficherModalSuppression(false);
+        } finally { setSuppressionEnCours(false); }
+    };
+
     const handleAjouterCommentaire = async () => {
         if (!nouveauCommentaire.trim()) return;
         setCommentaireEnCours(true);
@@ -129,6 +146,10 @@ function DocumentDetail({ documentId, user, onRetour }) {
 
     if (!document) return <div style={{ padding: 40, color: 'var(--text-muted)' }}>Chargement...</div>;
 
+    const peutSupprimer = document.user_id === user.id
+        || user.role_app === 'admin'
+        || (user.role_app === 'chef' && user.departement && user.departement === document.auteur_departement);
+
     const statutBadge = () => {
         if (document.statut === 'signe') return <span className="gct-badge gct-badge-success">signe</span>;
         if (document.statut === 'refuse') return <span className="gct-badge gct-badge-danger">refuse</span>;
@@ -137,15 +158,23 @@ function DocumentDetail({ documentId, user, onRetour }) {
 
     return (
         <div>
-            <div className="page-header" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                <button className="gct-btn gct-btn-ghost gct-btn-sm" onClick={onRetour}>
-                    <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-                    Retour
-                </button>
-                <div>
-                    <div className="page-title">{document.titre}</div>
-                    <div className="page-subtitle">Créé par {document.auteur_prenom} {document.auteur_nom} le {new Date(document.date_creation).toLocaleString('fr-FR')}</div>
+            <div className="page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                    <button className="gct-btn gct-btn-ghost gct-btn-sm" onClick={onRetour}>
+                        <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                        Retour
+                    </button>
+                    <div>
+                        <div className="page-title">{document.titre}</div>
+                        <div className="page-subtitle">Créé par {document.auteur_prenom} {document.auteur_nom} le {new Date(document.date_creation).toLocaleString('fr-FR')}</div>
+                    </div>
                 </div>
+                {peutSupprimer && (
+                    <button className="gct-btn gct-btn-danger gct-btn-sm" onClick={() => setAfficherModalSuppression(true)}>
+                        <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                        Supprimer
+                    </button>
+                )}
             </div>
 
             <div className="gct-card" style={{ maxWidth: 720 }}>
@@ -328,6 +357,28 @@ function DocumentDetail({ documentId, user, onRetour }) {
                                 {refusEnCours ? 'Envoi en cours...' : 'Confirmer le refus'}
                             </button>
                             <button className="gct-btn gct-btn-ghost" style={{ flex: 1, justifyContent: 'center' }} onClick={() => { setAfficherModalRefus(false); setMotifRefus(''); }} disabled={refusEnCours}>Annuler</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {afficherModalSuppression && (
+                <div className="gct-modal-overlay">
+                    <div className="gct-modal">
+                        <div className="gct-modal-title">Supprimer ce document ?</div>
+                        <div className="gct-modal-sub">
+                            Cette action est <strong>irreversible</strong>. <strong>{document.titre}</strong>, ses signatures,
+                            ses commentaires et le fichier PDF seront supprimes definitivement.
+                        </div>
+                        {signeCount > 0 && (
+                            <div className="gct-alert gct-alert-danger" style={{ fontSize: 12 }}>
+                                Attention : {signeCount} signature(s) deja enregistree(s) seront perdues.
+                            </div>
+                        )}
+                        <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+                            <button className="gct-btn gct-btn-danger" style={{ flex: 1, justifyContent: 'center' }} onClick={handleSupprimer} disabled={suppressionEnCours}>
+                                {suppressionEnCours ? 'Suppression...' : 'Oui, supprimer definitivement'}
+                            </button>
+                            <button className="gct-btn gct-btn-ghost" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setAfficherModalSuppression(false)} disabled={suppressionEnCours}>Annuler</button>
                         </div>
                     </div>
                 </div>

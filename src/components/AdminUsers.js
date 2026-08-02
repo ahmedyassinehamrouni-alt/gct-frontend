@@ -3,6 +3,20 @@ import api from '../api';
 
 const LABEL_ROLE = { admin: 'Administrateur', chef: 'Chef de service', agent: 'Agent' };
 
+// Liste fixe des departements GCT — a adapter si besoin, mais garder cette liste
+// synchronisee avec DEPARTEMENTS_VALIDES dans backend/routes/adminRoutes.js
+export const DEPARTEMENTS = [
+    'Production',
+    'Maintenance',
+    'Informatique',
+    'Ressources Humaines',
+    'Finance & Comptabilite',
+    'Qualite, Securite & Environnement',
+    'Achats & Logistique',
+    'Laboratoire & R&D',
+    'Direction Generale',
+];
+
 function AdminUsers({ user }) {
     const [users, setUsers] = useState([]);
     const [message, setMessage] = useState('');
@@ -128,7 +142,10 @@ function AdminUsers({ user }) {
                             </div>
                             <div className="gct-form-group" style={{ flex: 1 }}>
                                 <label className="gct-label">Departement</label>
-                                <input className="gct-input" placeholder="Ex: Informatique" value={departement} onChange={e => setDepartement(e.target.value)} />
+                                <select className="gct-input" value={departement} onChange={e => setDepartement(e.target.value)} required>
+                                    <option value="">Selectionner...</option>
+                                    {DEPARTEMENTS.map(d => <option key={d} value={d}>{d}</option>)}
+                                </select>
                             </div>
                         </div>
                         <div className="gct-form-group">
@@ -167,7 +184,12 @@ function AdminUsers({ user }) {
                                 {editId === u.id ? (
                                     <>
                                         <td><input className="gct-input" style={{ padding: '4px 8px', fontSize: 12 }} value={editPoste} onChange={e => setEditPoste(e.target.value)} /></td>
-                                        <td><input className="gct-input" style={{ padding: '4px 8px', fontSize: 12 }} value={editDepartement} onChange={e => setEditDepartement(e.target.value)} /></td>
+                                        <td>
+                                            <select className="gct-input" style={{ padding: '4px 8px', fontSize: 12 }} value={editDepartement} onChange={e => setEditDepartement(e.target.value)}>
+                                                <option value="">—</option>
+                                                {DEPARTEMENTS.map(d => <option key={d} value={d}>{d}</option>)}
+                                            </select>
+                                        </td>
                                         <td>
                                             <select className="gct-input" style={{ padding: '4px 8px', fontSize: 12 }} value={editRoleApp} onChange={e => setEditRoleApp(e.target.value)}>
                                                 <option value="agent">Agent</option>
