@@ -22,11 +22,11 @@ function DocumentList({ user, onVoirDocument }) {
 
     const chargerDocuments = async () => {
         try {
-            const params = { recherche };
+            const params = { recherche, role_app: user.role_app, departement: user.departement || '' };
             if (filtre === 'waiting_on_me' || filtre === 'created_by_me') {
                 params.filtre = filtre;
-                params.user_id = user.id;
             }
+            params.user_id = user.id;
             if (auteurId) params.auteur_id = auteurId;
             if (dateDebut) params.date_debut = dateDebut;
             if (dateFin) params.date_fin = dateFin;
@@ -37,8 +37,6 @@ function DocumentList({ user, onVoirDocument }) {
     };
 
     useEffect(() => { chargerDocuments(); }, [recherche, filtre, auteurId, dateDebut, dateFin]);
-
-    const peutSigner = (doc) => filtre === 'waiting_on_me' && user.role === 'responsable';
 
     const toggleSelection = (id, e) => {
         e.stopPropagation();
@@ -58,7 +56,6 @@ function DocumentList({ user, onVoirDocument }) {
                 document_ids: selection,
                 user_id: user.id,
                 nom_signataire: `${user.prenom} ${user.nom}`,
-                role: user.role,
                 cle_privee: clePrivee.trim()
             });
             setBulkResultats(res.data.resultats);
@@ -97,9 +94,7 @@ function DocumentList({ user, onVoirDocument }) {
                     <div className="doc-filter-tabs">
                         <button className={`doc-filter-tab${filtre === 'tous' ? ' active' : ''}`} onClick={() => setFiltre('tous')}>Tous</button>
                         <button className={`doc-filter-tab${filtre === 'created_by_me' ? ' active' : ''}`} onClick={() => setFiltre('created_by_me')}>Crees par moi</button>
-                        {user.role === 'responsable' && (
-                            <button className={`doc-filter-tab${filtre === 'waiting_on_me' ? ' active' : ''}`} onClick={() => setFiltre('waiting_on_me')}>En attente pour moi</button>
-                        )}
+                        <button className={`doc-filter-tab${filtre === 'waiting_on_me' ? ' active' : ''}`} onClick={() => setFiltre('waiting_on_me')}>En attente pour moi</button>
                     </div>
 
                     <div className="doc-filter-row">

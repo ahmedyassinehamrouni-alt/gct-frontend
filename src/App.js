@@ -1,19 +1,18 @@
 import React, { useState } from 'react';
 import './app.css';
 import Login from './components/Login';
-import Signup from './components/signup';
 import Navbar from './components/Navbar';
 import DocumentList from './components/DocumentList';
 import DocumentForm from './components/DocumentForm';
 import DocumentDetail from './components/DocumentDetail';
 import SignatureHistory from './components/SignatureHistory';
 import MonCertificat from './components/MonCertificat';
+import AdminUsers from './components/AdminUsers';
 
 function App() {
     const [user, setUser] = useState(null);
     const [page, setPage] = useState('liste');
     const [documentId, setDocumentId] = useState(null);
-    const [afficherInscription, setAfficherInscription] = useState(false);
     const [clePrivee, setClePrivee] = useState(null);
 
     const handleLogin = (userData) => {
@@ -29,8 +28,7 @@ function App() {
     const handleVoirDocument = (id) => { setDocumentId(id); setPage('detail'); };
 
     if (!user) {
-        if (afficherInscription) return <Signup onInscrit={() => setAfficherInscription(false)} onAllerConnexion={() => setAfficherInscription(false)} />;
-        return <Login onLogin={handleLogin} onAllerInscription={() => setAfficherInscription(true)} />;
+        return <Login onLogin={handleLogin} />;
     }
 
     if (clePrivee) {
@@ -72,6 +70,7 @@ function App() {
     {page === 'detail' && <DocumentDetail documentId={documentId} user={user} onRetour={() => setPage('liste')} />}
     {page === 'historique' && <SignatureHistory />}
     {page === 'certificat' && <MonCertificat user={user} onRetour={() => setPage('liste')} />}
+    {page === 'admin' && user.role_app === 'admin' && <AdminUsers user={user} />}
 </main>
         </div>
     );

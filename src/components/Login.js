@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import api from '../api';
 import logo from '../assets/logogct.png';
 
-function Login({ onLogin, onAllerInscription }) {
+function Login({ onLogin }) {
     const [email, setEmail] = useState('');
     const [motDePasse, setMotDePasse] = useState('');
     const [erreur, setErreur] = useState('');
@@ -52,12 +52,9 @@ function Login({ onLogin, onAllerInscription }) {
                     </button>
                 </form>
 
-                {onAllerInscription && (
-                    <button onClick={onAllerInscription}
-                        style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '12px', width: '100%', marginTop: '12px', cursor: 'pointer', textAlign: 'center' }}>
-                        Pas encore de compte ? S'inscrire
-                    </button>
-                )}
+                <div style={{ textAlign: 'center', fontSize: 11.5, color: 'var(--text-muted)', marginTop: 12 }}>
+                    Les comptes sont crees par un administrateur. Contactez le service informatique si besoin.
+                </div>
 
                 <hr className="login-divider" />
 

@@ -7,12 +7,12 @@ function DocumentForm({ user, onDocumentCree }) {
     const [fichier, setFichier] = useState(null);
     const [message, setMessage] = useState('');
     const [messageType, setMessageType] = useState('');
-    const [responsables, setResponsables] = useState([]);
+    const [signataires, setSignataires] = useState([]);
     const [signers, setSigners] = useState([]);
     const [ordreObligatoire, setOrdreObligatoire] = useState(false);
 
     useEffect(() => {
-        api.get('/users/responsables').then(r => setResponsables(r.data.filter(x => x.id !== user.id))).catch(console.error);
+        api.get('/users/signataires').then(r => setSignataires(r.data.filter(x => x.id !== user.id))).catch(console.error);
     }, [user.id]);
 
     const ajouter = (r) => {
@@ -60,7 +60,7 @@ function DocumentForm({ user, onDocumentCree }) {
         }
     };
 
-    const disponibles = responsables.filter(r => !signers.find(s => s.user_id === r.id));
+    const disponibles = signataires.filter(r => !signers.find(s => s.user_id === r.id));
 
     return (
         <div>
@@ -89,7 +89,12 @@ function DocumentForm({ user, onDocumentCree }) {
                             <div className="signer-list mb-2">
                                 {disponibles.map(r => (
                                     <div key={r.id} className="signer-list-item">
-                                        <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{r.prenom} {r.nom}</span>
+                                        <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+                                            {r.prenom} {r.nom}
+                                            {(r.poste || r.departement) && (
+                                                <span style={{ color: 'var(--text-muted)', fontSize: 11 }}> — {[r.poste, r.departement].filter(Boolean).join(', ')}</span>
+                                            )}
+                                        </span>
                                         <button type="button" className="gct-btn gct-btn-ghost gct-btn-sm" onClick={() => ajouter(r)} disabled={signers.length >= 5}>+ Ajouter</button>
                                     </div>
                                 ))}

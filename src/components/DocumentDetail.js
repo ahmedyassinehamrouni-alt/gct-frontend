@@ -52,7 +52,7 @@ function DocumentDetail({ documentId, user, onRetour }) {
         if (!clePrivee.trim()) { setMessage('Veuillez coller votre cle privee.'); setMessageType('danger'); return; }
         setEnCours(true);
         try {
-            await api.post('/signatures', { document_id: document.id, user_id: user.id, nom_signataire: `${user.prenom} ${user.nom}`, role: user.role, cle_privee: clePrivee.trim() });
+            await api.post('/signatures', { document_id: document.id, user_id: user.id, nom_signataire: `${user.prenom} ${user.nom}`, cle_privee: clePrivee.trim() });
             setMessage('Document signe avec succes.'); setMessageType('success');
             setAfficherModal(false); setClePrivee(''); charger();
         } catch (err) {
@@ -64,7 +64,7 @@ function DocumentDetail({ documentId, user, onRetour }) {
         if (!motifRefus.trim()) { setMessage('Veuillez indiquer un motif de refus.'); setMessageType('danger'); return; }
         setRefusEnCours(true);
         try {
-            await api.post('/signatures/refuser', { document_id: document.id, user_id: user.id, role: user.role, motif: motifRefus.trim() });
+            await api.post('/signatures/refuser', { document_id: document.id, user_id: user.id, motif: motifRefus.trim() });
             setMessage('Document refuse.'); setMessageType('warning');
             setAfficherModalRefus(false); setMotifRefus(''); charger();
         } catch (err) {
@@ -224,10 +224,10 @@ function DocumentDetail({ documentId, user, onRetour }) {
                 )}
 
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                    {user.role === 'responsable' && monTour() && (
+                    {monTour() && (
                         <button className="gct-btn gct-btn-success" onClick={() => setAfficherModal(true)}>Signer ce document</button>
                     )}
-                    {user.role === 'responsable' && monTour() && (
+                    {monTour() && (
                         <button className="gct-btn gct-btn-danger" onClick={() => setAfficherModalRefus(true)}>Refuser ce document</button>
                     )}
                     {document.statut === 'signe' && (
