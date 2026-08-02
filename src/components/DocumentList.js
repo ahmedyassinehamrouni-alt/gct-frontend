@@ -148,7 +148,12 @@ function DocumentList({ user, onVoirDocument }) {
                                     </td>
                                 )}
                                 <td className="doc-title-cell">{doc.titre}</td>
-                                <td className="doc-author-cell">{doc.auteur_prenom} {doc.auteur_nom}</td>
+                                <td className="doc-author-cell">
+                                    {doc.auteur_prenom} {doc.auteur_nom}
+                                    {(doc.auteur_poste || doc.auteur_departement) && (
+                                        <div className="doc-author-meta">{[doc.auteur_poste, doc.auteur_departement].filter(Boolean).join(', ')}</div>
+                                    )}
+                                </td>
                                 <td className="doc-date-cell">{new Date(doc.date_creation).toLocaleDateString('fr-FR')}</td>
                                 <td>
                                     {doc.statut === 'signe' ? (

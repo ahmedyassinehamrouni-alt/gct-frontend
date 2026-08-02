@@ -166,7 +166,12 @@ function DocumentDetail({ documentId, user, onRetour }) {
                     </button>
                     <div>
                         <div className="page-title">{document.titre}</div>
-                        <div className="page-subtitle">Créé par {document.auteur_prenom} {document.auteur_nom} le {new Date(document.date_creation).toLocaleString('fr-FR')}</div>
+                        <div className="page-subtitle">
+                            Créé par {document.auteur_prenom} {document.auteur_nom} le {new Date(document.date_creation).toLocaleString('fr-FR')}
+                            {(document.auteur_poste || document.auteur_departement) && (
+                                <span className="author-meta"> — {[document.auteur_poste, document.auteur_departement].filter(Boolean).join(', ')}</span>
+                            )}
+                        </div>
                     </div>
                 </div>
                 {peutSupprimer && (
@@ -211,7 +216,12 @@ function DocumentDetail({ documentId, user, onRetour }) {
                             return (
                                 <div key={s.id} className={`signer-row${estSigne ? ' signed' : ''}${estRefuse ? ' refused' : ''}`}>
                                     {document.ordre_obligatoire && <div className="signer-order-badge" style={{ background: estSigne ? 'var(--success)' : estRefuse ? 'var(--danger)' : 'var(--text-muted)' }}>{i + 1}</div>}
-                                    <span className="signer-name">{s.prenom} {s.nom}{estMoi && <span className="signer-you">(vous)</span>}</span>
+                                    <span className="signer-name">
+                                        {s.prenom} {s.nom}{estMoi && <span className="signer-you">(vous)</span>}
+                                        {(s.poste || s.departement) && (
+                                            <span className="signer-meta"> — {[s.poste, s.departement].filter(Boolean).join(', ')}</span>
+                                        )}
+                                    </span>
                                     {estSigne
                                         ? <span className="gct-badge gct-badge-success">signe {s.date_signature ? new Date(s.date_signature).toLocaleDateString('fr-FR') : ''}</span>
                                         : estRefuse ? <span className="gct-badge gct-badge-danger">refuse</span>

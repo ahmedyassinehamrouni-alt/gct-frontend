@@ -293,6 +293,12 @@ body {
   font-size: 12px;
 }
 
+.doc-author-meta {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
 .doc-date-cell {
   color: var(--text-muted);
   font-size: 12px;
@@ -738,6 +744,8 @@ body {
 
 .signer-name { flex: 1; font-size: 13px; font-weight: 500; }
 .signer-you { font-size: 11px; color: var(--accent); margin-left: 6px; }
+.signer-meta { font-size: 11px; color: var(--text-muted); font-weight: 400; }
+.author-meta { color: var(--text-muted); }
 
 /* ── MODAL ── */
 .gct-modal-overlay {
