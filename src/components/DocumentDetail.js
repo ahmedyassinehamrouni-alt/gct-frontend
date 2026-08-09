@@ -26,7 +26,7 @@ function DocumentDetail({ documentId, user, onRetour }) {
     const [nouveauCommentaire, setNouveauCommentaire] = useState('');
     const [commentaireEnCours, setCommentaireEnCours] = useState(false);
 
-    const pdfUrl = (doc) => `https://gct-backend-production.up.railway.app/uploads/${doc.fichier_pdf}?t=${Date.now()}`;
+    const pdfUrl = (doc) => `${api.defaults.baseURL}/documents/${doc.id}/pdf?t=${Date.now()}`;
 
     const charger = async () => {
         try {
@@ -192,7 +192,7 @@ function DocumentDetail({ documentId, user, onRetour }) {
                 </div>
 
                 {/* Aperçu du PDF intégré */}
-                {document.fichier_pdf && (
+                {document.fichier_pdf_nom && (
                     <div className="pdf-preview-wrapper">
                         <iframe
                             src={pdfUrl(document)}
