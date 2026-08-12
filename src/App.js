@@ -87,7 +87,7 @@ function App() {
         <div className="app-layout">
             <Navbar user={user} onNaviguer={(p) => { setPage(p); }} onDeconnexion={handleDeconnexion} activePage={page} />
             <main className="main-content">
-                {page === 'liste' && <DocumentList onVoirDocument={handleVoirDocument} />}
+                {page === 'liste' && <DocumentList user={user} onVoirDocument={handleVoirDocument} />}
                 {page === 'creer' && <DocumentForm user={user} onDocumentCree={() => setPage('liste')} />}
                 {page === 'detail' && <DocumentDetail documentId={documentId} user={user} onRetour={() => setPage('liste')} />}
                 {page === 'historique' && <SignatureHistory />}
