@@ -252,18 +252,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 
 .topbar-sep { width: 1px; height: 36px; background: #d9e5f2; }
 
-.topbar-bell {
-  position: relative;
-  width: 64px; height: 40px;
-  display: flex; align-items: center; justify-content: center;
-  border: none; background: none; color: var(--navy); cursor: pointer;
-}
-.topbar-bell-dot {
-  position: absolute; top: 5px; left: 36px;
-  width: 9px; height: 9px; border-radius: 50%;
-  background: #f32b35; border: 1.5px solid #f7f9fd;
-}
-
 .topbar-user {
   display: flex; align-items: center; gap: 12px;
   padding: 0 0 0 20px;
