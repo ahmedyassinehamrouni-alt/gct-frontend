@@ -28,7 +28,6 @@ function Topbar({ user, onNaviguer, onDeconnexion }) {
 
             <div className="topbar-company">
                 <strong>Groupe Chimique de Tunisie</strong>
-                <span>Une chimie pour demain</span>
             </div>
             <div className="topbar-sep" />
             <div ref={ref} style={{ position: 'relative' }}>
