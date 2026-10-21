@@ -191,17 +191,6 @@ function DocumentDetail({ documentId, user, onRetour }) {
                     </a>
                 </div>
 
-                {/* Aperçu du PDF intégré */}
-                {document.fichier_pdf_nom && (
-                    <div className="pdf-preview-wrapper">
-                        <iframe
-                            src={pdfUrl(document)}
-                            title={`Aperçu — ${document.titre}`}
-                            className="pdf-preview-frame"
-                        />
-                    </div>
-                )}
-
                 {signers.length > 0 && (
                     <div className="signing-progress">
                         <div className="signing-progress-header">

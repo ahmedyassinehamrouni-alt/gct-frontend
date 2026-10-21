@@ -549,8 +549,6 @@ textarea.gct-input { height: auto; padding: 10px 12px; }
 .gct-alert-warning { background: var(--warning-light); color: var(--warning); border: 1px solid rgba(192,132,26,0.25); }
 
 /* ── PDF ── */
-.pdf-preview-wrapper { margin-bottom: 20px; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
-.pdf-preview-frame { width: 100%; height: 480px; border: none; display: block; background: #525659; }
 .pdf-link {
   display: inline-flex; align-items: center; gap: 7px;
   padding: 8px 16px; background: #fbfcfe; border: 1px solid var(--border);
