@@ -9,6 +9,7 @@ import DocumentForm from './components/DocumentForm';
 import DocumentDetail from './components/DocumentDetail';
 import SignatureHistory from './components/SignatureHistory';
 import MonCertificat from './components/MonCertificat';
+import AdminUsers from './components/AdminUsers';
 
 // Relit l'utilisateur depuis le stockage local au demarrage de l'app,
 // pour eviter d'etre deconnecte a chaque rafraichissement de la page.
@@ -94,6 +95,7 @@ function App() {
                     {page === 'creer' && <DocumentForm user={user} onDocumentCree={() => setPage('liste')} />}
                     {page === 'detail' && <DocumentDetail documentId={documentId} user={user} onRetour={() => setPage('liste')} />}
                     {page === 'historique' && <SignatureHistory />}
+                    {page === 'admin' && user.role_app === 'admin' && <AdminUsers user={user} />}
                     {page === 'certificat' && <MonCertificat user={user} onRetour={() => setPage('liste')} />}
                 </main>
                 <footer className="app-footer">
