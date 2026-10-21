@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import api from '../api';
-import logo from '../assets/logogct.png';
+import Logo from './Logo';
 
 function Login({ onLogin }) {
     const [email, setEmail] = useState('');
@@ -26,7 +26,7 @@ function Login({ onLogin }) {
         <div className="login-page">
             <div className="login-card">
                 <div className="login-logo">
-                    <img src={logo} alt="GCT" />
+                    <Logo />
                 </div>
 
                 <div className="login-title">Connexion</div>

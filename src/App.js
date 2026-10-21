@@ -3,6 +3,7 @@ import './app.css';
 import Login from './components/Login';
 import Signup from './components/signup';
 import Navbar from './components/Navbar';
+import Topbar from './components/Topbar';
 import DocumentList from './components/DocumentList';
 import DocumentForm from './components/DocumentForm';
 import DocumentDetail from './components/DocumentDetail';
@@ -86,13 +87,20 @@ function App() {
     return (
         <div className="app-layout">
             <Navbar user={user} onNaviguer={(p) => { setPage(p); }} onDeconnexion={handleDeconnexion} activePage={page} />
-            <main className="main-content">
-                {page === 'liste' && <DocumentList user={user} onVoirDocument={handleVoirDocument} />}
-                {page === 'creer' && <DocumentForm user={user} onDocumentCree={() => setPage('liste')} />}
-                {page === 'detail' && <DocumentDetail documentId={documentId} user={user} onRetour={() => setPage('liste')} />}
-                {page === 'historique' && <SignatureHistory />}
-                {page === 'certificat' && <MonCertificat user={user} onRetour={() => setPage('liste')} />}
-            </main>
+            <div className="app-main">
+                <Topbar user={user} onNaviguer={setPage} onDeconnexion={handleDeconnexion} />
+                <main className="main-content">
+                    {page === 'liste' && <DocumentList user={user} onVoirDocument={handleVoirDocument} onNouveauDocument={() => setPage('creer')} />}
+                    {page === 'creer' && <DocumentForm user={user} onDocumentCree={() => setPage('liste')} />}
+                    {page === 'detail' && <DocumentDetail documentId={documentId} user={user} onRetour={() => setPage('liste')} />}
+                    {page === 'historique' && <SignatureHistory />}
+                    {page === 'certificat' && <MonCertificat user={user} onRetour={() => setPage('liste')} />}
+                </main>
+                <footer className="app-footer">
+                    <div className="app-footer-bar" />
+                    <div className="app-footer-text">GCT – Signature Électronique<i>|</i>Groupe Chimique de Tunisie</div>
+                </footer>
+            </div>
         </div>
     );
 }
